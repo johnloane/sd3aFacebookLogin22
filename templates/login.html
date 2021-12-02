@@ -1,0 +1,13 @@
+<html>
+	<head> 
+		<title>Getting Sensors Online</title>
+	</head>
+	<body>
+		<h2> Login ... </h2>
+		<a href="/facebook_login">Login with Facebook</a>
+		{% for message in get_flashed_messages() %}
+			{{message}}
+		{% endfor %}
+
+	</body>
+</html>
