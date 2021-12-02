@@ -74,6 +74,7 @@ def clear_user_session():
 @app.route('/logout')
 @login_required
 def logout():
+    my_db.user_logout(session['user_id'])
     clear_user_session()
     flash("You just logged out")
     return redirect(url_for('login'))

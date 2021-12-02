@@ -107,4 +107,9 @@ function logout()
         })
     location.replace('/logout')
 }
+
+function facebookLogin()
+{
+    location.replace("/facebook_login");
+}
 	
