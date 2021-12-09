@@ -21,9 +21,12 @@ db = SQLAlchemy(app)
 alive = 0
 data = {}
 
-facebook_id = '262680999236983'#os.getenv('sd3aFacebookApp')
+test = os.getenv("TEST")
+print(test)
+
+facebook_id = os.getenv('FACEBOOK_APP')
 print(facebook_id)
-facebook_secret = 'd3fca92625388651a041d86af8e575fb'#os.getenv('sd3aFacebookSecret')
+facebook_secret = os.getenv('FACEBOOK_SECRET')
 
 facebook_blueprint = make_facebook_blueprint(client_id = facebook_id, client_secret = facebook_secret, redirect_url= '/facebook_login')
 app.register_blueprint(facebook_blueprint, url_prefix = '/facebook_login')
@@ -63,7 +66,7 @@ def facebook_login():
 def main():
     flash(session['user'])
     my_db.add_user_and_login(session['user'], int(session['user_id']))
-    return render_template('index.html')
+    return render_template('index.html', user_id=session['user_id'], online_users = my_db.get_all_logged_in_users())
 
 def clear_user_session():
     session['logged_in'] = None
@@ -105,6 +108,20 @@ def event(name, action):
         elif action == "OFF":
             data["alarm"] = False
     return str("OK")
+
+
+@app.route('/grant-<who>-<key_or_id>-<read>-<write>', methods=['GET', 'POST'])
+def grant_access(who, key_or_id, read, write):
+    if int(session['user_id']) == 327150209222373:
+        print("Granting " + key_or_id + " read " + read + ", write " + write + " permision")
+        my_db.add_user_permission(key_or_id, read, write)
+        authkey = my_db.get_auth_key(key_or_id)
+        PB.grant_access(key_or_id, str_to_bool(read), str_to_bool(write))
+    else:
+        print("WHO ARE YOU?")
+        return json.dumps({"access" : "denied"})
+    return json.dumps({"access" : "granted"})
+
 
 
 if __name__ == '__main__':

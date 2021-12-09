@@ -16,6 +16,21 @@
 		<div>
 			<button onClick="logout()">Logout</button>
 		</div>
+		{% if user_id == "327150209222373" %}
+		<div>
+			<h2> Online users</h2>
+			<ul>
+				{% for n in online_users["user_record"] %}
+				<li>
+					{{ n[0]}}
+					<input type="checkbox" id="read-user-{{n[1]}}" {{n[2]}}>Read Access
+					<input type="checkbox" id="write-user-{{n[1]}}" {{n[3]}}>Write Access
+					<button>Apply</button>
+				</li>
+				{% endfor %}
+			</ul>
+		</div>
+		{% endif %}
 		{% for message in get_flashed_messages() %}
 			{{message}}
 		{% endfor %}

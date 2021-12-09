@@ -55,3 +55,20 @@ def user_logout(user_id):
         row.login = 0
         db.session.commit()
         print("user " + row.name + " logout updated")
+
+
+def get_all_logged_in_users():
+    row = user_table.query.filter_by(login=1).all()
+    online_user_record = {"user_record" : []}
+    for n in range(0 ,len(row)):
+        if(row[n].read_access):
+            read = "checked"
+        else:
+            read = "unchecked"
+        if row[n].write_access:
+            write = "checked"
+        else:
+            write = "unchecked"
+        online_user_record["user_record"].append([row[n].name, row[n].user_id, read, write])
+        print(str(row[n].id) + " | " + row[n].name + " | " + str(row[n].user_id) + " | " + str(row[n].authkey) + " | " + str(row[n].read_access) + " | " + str(row[n].write_access))
+    return online_user_record
