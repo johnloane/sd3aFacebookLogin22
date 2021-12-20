@@ -2,14 +2,14 @@ from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 
 server_UUID = "server"
-cipher_key = "JohnsCipherKey"
+cipher_key = os.getenv("PUBNUB_CIPHER_KEY")
 my_channel = "johns-pi-channel-sd3a"
 
 pnconfig = PNConfiguration()
 
-pnconfig.subscribe_key = 'sub-c-88506320-2127-11eb-90e0-26982d4915be'
-pnconfig.publish_key = 'pub-c-1bbfa82c-946c-4344-8007-85d2c1061101'
-pnconfig.secret_key = 'sec-c-NGRmYzc5ZDItMGFlMS00OTRjLTlkYzgtMTkzM2Y2NWFjNDAz'
+pnconfig.subscribe_key = os.getenv("PUBNUB_SUBSCRIBE_KEY")
+pnconfig.publish_key = os.getenv("PUBNUB_PUBLISH_KEY")
+pnconfig.secret_key = os.getenv("PUBNUB_SECRET_KEY")
 pnconfig.uuid = server_UUID
 pnconfig.cipher_key = cipher_key
 pubnub = PubNub(pnconfig)
