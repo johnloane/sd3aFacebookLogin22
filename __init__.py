@@ -5,15 +5,16 @@ from flask_sqlalchemy import SQLAlchemy
 
 import json
 import os
+import hashlib, random, string
 
 import time, threading
 
-from . import my_db
+from . import my_db, PB
 
 app = Flask(__name__)
 
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:Mysql1234!@localhost/sd3a_login'
+mysql_password = os.getenv("MYSQL_PASSWORD")
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:'+mysql_password+'@localhost/sd3a_login'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -30,6 +31,8 @@ facebook_secret = os.getenv('FACEBOOK_SECRET')
 
 facebook_blueprint = make_facebook_blueprint(client_id = facebook_id, client_secret = facebook_secret, redirect_url= '/facebook_login')
 app.register_blueprint(facebook_blueprint, url_prefix = '/facebook_login')
+# Give the raspberry pi an auth key (johns-raspberry-pi) and give it read and write access to the channel
+PB.grant_access("johns-raspberry-pi", True, True)
 
 
 def login_required(f):
@@ -109,19 +112,47 @@ def event(name, action):
             data["alarm"] = False
     return str("OK")
 
+def str_to_bool(s):
+    if 'true' in str(s):
+        return True
+    elif 'false' in str(s):
+        return False
+    else:
+        raise ValueError
+
 
 @app.route('/grant-<who>-<key_or_id>-<read>-<write>', methods=['GET', 'POST'])
 def grant_access(who, key_or_id, read, write):
     if int(session['user_id']) == 327150209222373:
         print("Granting " + key_or_id + " read " + read + ", write " + write + " permision")
         my_db.add_user_permission(key_or_id, read, write)
-        authkey = my_db.get_auth_key(key_or_id)
+        authkey = my_db.get_authkey(key_or_id)
         PB.grant_access(key_or_id, str_to_bool(read), str_to_bool(write))
     else:
         print("WHO ARE YOU?")
         return json.dumps({"access" : "denied"})
     return json.dumps({"access" : "granted"})
 
+def salt(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+
+def create_auth_key():
+    s = salt(10)
+    hash_string = str(session['facebook_token']) + s
+    hashing = hashlib.sha256(hash_string.encode('utf-8'))
+    return hashing.hexdigest()
+
+@app.route('/get_authkey', methods=['POST', 'GET'])
+def get_authkey():
+    print("Creating authkey for " + session['user'])
+    auth_key = create_auth_key()
+    my_db.add_authkey(int(session['user_id']), auth_key)
+    (read, write) = my_db.get_user_access(int(session['user_id']))
+    PB.grant_access(auth_key, read, write)
+    auth_response = {'auth_key':auth_key, 'cipher_key': PB.cipher_key}
+    json_response = json.dumps(auth_response)
+    return str(json_response)
 
 
 if __name__ == '__main__':
